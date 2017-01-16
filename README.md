@@ -27,7 +27,7 @@ et vous devriez avoir :
 Hapi-boilerplate
 ├── app                         # Partie applicative de l'API (endpoints, handlers, plugins, ...)
 │   ├── endpoints               # Entrées des traitements par les requêtes http
-│   │   └── default.js          # Entrées de toutes les requêtes sur `/`. Utilisées pour vérifier l'état du service
+│   │   └── user          # Entrées de toutes les requêtes sur `/`. Utilisées pour vérifier l'état du service
 │   ├── handlers                # Traitement des différentes entrées
 │   ├── plugins                 # Plugins internes au projet
 │   └── handlers.js             # ficher permettant de charger tous les handlers

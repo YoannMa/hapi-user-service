@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports.root = (request, response) => {
+module.exports.create = (request, response) => {
     response(null,  {
         result : 'vous êtes connectés'
     });

@@ -24,6 +24,23 @@ module.exports.init = server => {
                 server.register({
                     register : require('hapi-boom-decorators')
                 }, done);
+            },
+            inert(done) {
+                server.register(require('inert'), done);
+            },
+            vision(done) {
+                server.register(require('vision'), done);
+            },
+            swagger(done) {
+                server.register({
+                    register : require('hapi-swagger'),
+                    options : {
+                        info: {
+                            'title': 'Test API Documentation',
+                            'version': 1.0,
+                        }
+                    }
+                }, done);
             }
         }, err => {
             if (err) {
