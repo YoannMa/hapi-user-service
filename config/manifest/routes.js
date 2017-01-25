@@ -1,24 +1,18 @@
 'use strict';
 
-const async     = require('async');
-const fs        = require('fs');
-const path      = require('path');
-const routeDir  = path.join(__dirname, '../../app/endpoints/');
-const routes    = fs.readdirSync(routeDir);
+const _        = require('lodash');
+const fs       = require('fs');
+const path     = require('path');
+const routeDir = path.join(__dirname, '../../app/endpoints/');
+const routes   = fs.readdirSync(routeDir);
 
-module.exports.init = server => {
-    return new Promise((resolve, reject) => {
-        async.each(routes, (route, done) => {
-            server.register({
-                register : require(path.join(routeDir, route))
-            }, done);
-        }, err => {
-            if (err) {
-                reject(err);
-                return;
+module.exports = _.map(routes, (route) => {
+    return {
+        plugin: {
+            register: path.join(routeDir, route),
+            options : {
+                select: 'api'
             }
-
-            resolve();
-        });
-    });
-};
+        }
+    };
+});

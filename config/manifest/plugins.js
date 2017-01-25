@@ -1,54 +1,59 @@
 'use strict';
 
-const async     = require('async');
 const envConfig = require('../environments/all');
+const path      = require('path');
+const Pack      = require('../../package.json');
 
-module.exports.init = server => {
-    return new Promise((resolve, reject) => {
-        async.series({
-            good(done) {
-                server.register({
-                    register : require('good')
-                }, done);
-            },
-            blipp(done) {
-                server.register({
-                    register : require('blipp'),
-                    options  : {
-                        showStart : envConfig.log.showRouteAtStart,
-                        showAuth  : true
-                    }
-                }, done);
-            },
-            boom(done) {
-                server.register({
-                    register : require('hapi-boom-decorators')
-                }, done);
-            },
-            inert(done) {
-                server.register(require('inert'), done);
-            },
-            vision(done) {
-                server.register(require('vision'), done);
-            },
-            swagger(done) {
-                server.register({
-                    register : require('hapi-swagger'),
-                    options : {
-                        info: {
-                            'title': 'Test API Documentation',
-                            'version': 1.0,
-                        }
-                    }
-                }, done);
+module.exports = [
+    {
+        plugin: {
+            register: 'good',
+            options : envConfig.log.goodConfig
+        }
+    },
+    {
+        plugin: {
+            register: 'blipp',
+            options : {
+                showStart: envConfig.log.showRouteAtStart,
+                showAuth : true
             }
-        }, err => {
-            if (err) {
-                reject(err);
-                return;
+        }
+    },
+    {
+        plugin: {
+            register: 'inert',
+            options : {}
+        }
+    },
+    {
+        plugin: {
+            register: 'vision',
+            options : {}
+        }
+    },
+    {
+        plugin: {
+            register: 'hapi-boom-decorators',
+            options : {}
+        }
+    },
+    {
+        plugin: {
+            register: 'hapi-swagger',
+            options : {
+                info             : {
+                    title  : 'Test API Documentation',
+                    version: Pack.version
+                },
+                documentationPage: envConfig.swagger.documentation,
+                jsonEditor       : true
             }
-
-            resolve();
-        });
-    });
-};
+        }
+    },
+    {
+        plugin: {
+            register: path.join(__dirname, '../../app', '/handlers')
+        }
+    }
+];

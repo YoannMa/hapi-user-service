@@ -1,15 +1,15 @@
 'use strict';
 
+const Glue = require('glue');
 const manifest = require('./config/manifest');
 
-manifest.init().then(server => {
-    server.start(err => {
-        if (err) {
-            throw err;
-        }
-
-        console.log(`Server running at: ${server.info.uri}`);
+Glue.compose(manifest, { relativeTo : __dirname }, (err, server) => {
+    if (err) {
+        throw err;
+    }
+    
+    server.start(() => {
+        server.log([ 'info', 'startup' ], 'Server is listening on : ' + server.info.uri.toLowerCase());
+        server.log([ 'info', 'startup' ], 'Environment Variable : ' + server.settings.app.env);
     });
-}).catch(err => {
-    throw err;
 });

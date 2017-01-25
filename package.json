@@ -9,24 +9,35 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/throrin19/hapi-boilerplate.git"
+    "url": "git+https://github.com/yoannma/hapi-boilerplate.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/throrin19/hapi-boilerplate/issues"
+    "url": "https://github.com/yoannma/hapi-boilerplate/issues"
   },
-  "homepage": "https://github.com/throrin19/hapi-boilerplate#readme",
+  "homepage": "https://github.com/yoannma/hapi-boilerplate#readme",
   "dependencies": {
-    "async": "2.1.4",
+    "@yoannma/iut-encrypt": "github:yoannma/iut-encrypt",
+    "async": "2.1.2",
     "blipp": "2.3.0",
-    "good": "7.1.0",
-    "hapi": "16.0.1",
-    "hapi-boom-decorators": "2.2.2",
-    "hapi-swagger": "^7.6.0",
-    "inert": "^4.1.0",
-    "joi": "^10.2.0",
-    "lodash": "^4.17.2",
-    "vision": "^4.1.1"
+    "boom": "4.2.0",
+    "faker": "3.1.0",
+    "glue": "4.0.0",
+    "good": "7.0.2",
+    "good-console": "6.3.1",
+    "good-squeeze": "5.0.1",
+    "hapi": "15.2.0",
+    "hapi-boom-decorators": "2.1.0",
+    "hapi-swagger": "7.4.0",
+    "inert": "4.0.2",
+    "joi": "10.0.1",
+    "joigoose": "1.5.7",
+    "json-mongoose": "0.3.3",
+    "k7": "1.5.0",
+    "k7-mongoose": "1.5.0",
+    "lodash": "latest",
+    "plugo": "0.3.8",
+    "vision": "4.1.0"
   }
 }
