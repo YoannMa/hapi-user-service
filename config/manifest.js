@@ -7,7 +7,7 @@ const models  = require('./manifest/models');
 const routes  = require('./manifest/routes');
 
 module.exports = {
-    server       : server.server,
-    connections  : server.connections,
-    registrations: _.union(plugins, models, routes)
+    server        : server.server,
+    connections   : server.connections,
+    registrations : _.union(plugins, models, routes)
 };

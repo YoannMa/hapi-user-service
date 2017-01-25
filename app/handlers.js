@@ -7,7 +7,7 @@ exports.register = (plugin, options, next) => {
         name : 'handlers',
         path : __dirname + '/handlers'
     };
-
+    
     // Exposes modules in the handlers folder to this plugin
     Plugo.expose(plugoptions, plugin, next);
 };

@@ -8,10 +8,10 @@ const routes   = fs.readdirSync(routeDir);
 
 module.exports = _.map(routes, (route) => {
     return {
-        plugin: {
-            register: path.join(routeDir, route),
-            options : {
-                select: 'api'
+        plugin : {
+            register : path.join(routeDir, route),
+            options  : {
+                select : 'api'
             }
         }
     };
