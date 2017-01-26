@@ -8,7 +8,7 @@ module.exports.register = (server, options, next) => {
     server.route(
         [
             {
-                method : 'PUT',
+                method : 'POST',
                 path   : '/user',
                 config : {
                     description : 'Créer un utilisateur en suivant un schéma Swagger',
@@ -78,7 +78,36 @@ module.exports.register = (server, options, next) => {
                 }
             },
             {
-                method : 'PATCH',
+                method : 'POST',
+                path   : '/user/inflate/{number}',
+                config : {
+                    description : 'Génére X user',
+                    tags        : [ 'api' ],
+                    handler     : handler.inflate,
+                    response    : {
+                        status : {
+                            200 : Joi.array().items(user.fullWithoutPassword)
+                        }
+                    },
+                    plugins     : {
+                        'hapi-swagger' : {
+                            responses : {
+                                200 : {
+                                    description : 'utilisateurs générés',
+                                    schema      : Joi.array().items(user.fullWithoutPassword)
+                                }
+                            }
+                        }
+                    },
+                    validate    : {
+                        params : {
+                            number : Joi.number().integer().min(1).max(500).required()
+                        }
+                    }
+                }
+            },
+            {
+                method : 'PUT',
                 path   : '/user/{id}',
                 config : {
                     description : 'Met à jour un utilisateur',
@@ -106,8 +135,8 @@ module.exports.register = (server, options, next) => {
                     response    : {
                         status : {
                             202 : Joi.object({
-                                before : user.full,
-                                after  : user.full
+                                before : user.fullWithoutPassword,
+                                after  : user.fullWithoutPassword
                             })
                         }
                     }

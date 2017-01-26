@@ -1,6 +1,32 @@
 'use strict';
 
 const _ = require('lodash');
+const casual = require('casual');
+
+casual.define('nir', () => { return require('nir-generator').generateNir() });
+
+casual.define('user', () => {
+    let firstName = casual.first_name;
+    let lastName = casual.last_name;
+    let randomCase = string => {
+        return _.map(string, char => {
+            return casual.coin_flip ? char.toUpperCase() : char.toLowerCase();
+        }).join('')
+    };
+    
+    let email = casual.email.split('@');
+    email = randomCase(email[0]) + '@' + email[1];
+    
+    return {
+        login: randomCase(firstName+lastName),
+        password: require('password-generator')(12, false),
+        email: email,
+        firstname: firstName,
+        lastname: lastName,
+        nir : casual.nir
+    };
+});
+
 
 module.exports.findAll = (request, reply) => {
     request.server.database.user.find({}).then(data => {
@@ -80,5 +106,15 @@ module.exports.delete = (request, reply) => {
         reply(null, { id : request.params.id })
     }).catch((err) => {
         reply.badImplementation(err, { id : request.params.id });
+    });
+};
+
+module.exports.inflate = (request, reply) => {
+    Promise.all(_.map(_.range(request.params.number), () => {
+        return (new request.server.database.user(casual.user)).save();
+    })).then(users => {
+        reply(null, _.map(users, user => user.toObject()));
+    }).catch(err => {
+        reply.badImplementation(err);
     });
 };
