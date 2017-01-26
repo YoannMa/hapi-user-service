@@ -70,7 +70,7 @@ module.exports.update = (request, reply) => {
 };
 
 module.exports.delete = (request, reply) => {
-    request.server.database.user.remove({
+    request.server.database.user.findOneAndRemove({
         _id : request.params.id,
     }).then(data => {
         if ( !data ) {
