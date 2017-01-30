@@ -55,5 +55,10 @@ module.exports = [
         plugin : {
             register : path.join(__dirname, '../../app', '/handlers')
         }
-    }
+    },
+    {
+        plugin : {
+            register : path.join(__dirname, '../../app/plugins/mail-sender'),
+        }
+    },
 ];

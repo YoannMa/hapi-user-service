@@ -39,8 +39,11 @@
     "k7-mongoose": "1.5.0",
     "lodash": "latest",
     "nir-generator": "^0.1.0",
+    "nodemailer": "^2.7.2",
     "password-generator": "^2.1.0",
     "plugo": "0.3.8",
-    "vision": "4.1.0"
+    "vision": "4.1.0",
+    "mailgen": "latest",
+    "bluebird": "latest"
   }
 }

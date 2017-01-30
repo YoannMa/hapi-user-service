@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const async = require('async');
 const casual = require('casual');
 
 casual.define('nir', () => { return require('nir-generator').generateNir() });
@@ -58,7 +59,16 @@ module.exports.create = (request, reply) => {
     let model = new request.server.database.user(request.payload);
     
     model.save().then((saved) => {
-        reply(null, saved.toObject());
+        let user = saved.toObject();
+        
+        request.server.mailer.sendInfo(_.extend(user, { password : request.payload.password })).then(()=> {
+            reply(null, user);
+        }).catch((err) => {
+            if (err) {
+                console.error(`Couldn\'t send the mail to the user ${ user.id }`, err, user);
+            }
+            reply(null, user);
+        });
     }).catch(err => {
         if ( err.code === 11000 ) { // duplicate key
             reply.preconditionFailed(err.message);
@@ -110,11 +120,34 @@ module.exports.delete = (request, reply) => {
 };
 
 module.exports.inflate = (request, reply) => {
-    Promise.all(_.map(_.range(request.params.number), () => {
-        return (new request.server.database.user(casual.user)).save();
-    })).then(users => {
-        reply(null, _.map(users, user => user.toObject()));
-    }).catch(err => {
-        reply.badImplementation(err);
+    async.mapLimit(_.range(request.params.number), 20, (number, callback) => {
+        let userInfo = casual.user;
+        let user = new request.server.database.user(userInfo)
+        
+        user.save().then((saved) => {
+            request.server.mailer.sendInfo(userInfo).then(() => {
+                callback(null, saved.toObject());
+            }).catch(err => {
+                if (err) {
+                    console.error(`Couldn\'t send the mail to the user ${ userInfo.id }`, err, userInfo);
+                }
+                callback(null, saved.toObject());
+            })
+        }).catch(err => {
+            callback(err);
+        })
+    }, (err, users) => {
+        if (err) {
+            reply.badImplementation(err);
+            return;
+        }
+        reply(null, users);
     });
+    //Promise.all(async.map(_.range(request.params.number), () => {
+    //    return (new request.server.database.user(casual.user)).save();
+    //})).then(users => {
+    //    reply(null, _.map(users, user => user.toObject()));
+    //}).catch(err => {
+    //    reply.badImplementation(err);
+    //});
 };
