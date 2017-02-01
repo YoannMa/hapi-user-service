@@ -13,9 +13,12 @@ const all = {
             host   : '0.0.0.0',
             port   : process.env.PORT || 8080,
             labels : [ 'api' ],
+            router : {
+                stripTrailingSlash : true,
+            },
             routes : {
-                cors     : true,
-                security : true
+                cors               : true,
+                security           : true
             }
         }
     },

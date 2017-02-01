@@ -1,14 +1,15 @@
 'use strict';
 
-const _ = require('lodash');
-const async = require('async');
-const casual = require('casual');
+const _       = require('lodash');
+const async   = require('async');
+const casual  = require('casual');
+const encrypt = require('@yoannma/iut-encrypt');
+const sendEmailKeysDiffConditionOnUpdate = [ 'login', 'password' ];
 
 casual.define('nir', () => { return require('nir-generator').generateNir() });
-
 casual.define('user', () => {
-    let firstName = casual.first_name;
-    let lastName = casual.last_name;
+    let firstName  = casual.first_name;
+    let lastName   = casual.last_name;
     let randomCase = string => {
         return _.map(string, char => {
             return casual.coin_flip ? char.toUpperCase() : char.toLowerCase();
@@ -16,18 +17,32 @@ casual.define('user', () => {
     };
     
     let email = casual.email.split('@');
-    email = randomCase(email[0]) + '@' + email[1];
+    email     = randomCase(email[ 0 ]) + '@' + email[ 1 ];
     
     return {
-        login: randomCase(firstName+lastName),
-        password: require('password-generator')(12, false),
-        email: email,
-        firstname: firstName,
-        lastname: lastName,
-        nir : casual.nir
+        login     : randomCase(firstName + lastName),
+        password  : require('password-generator')(12, false),
+        email     : email,
+        firstname : firstName,
+        lastname  : lastName,
+        nir       : casual.nir
     };
 });
 
+module.exports.authenticateUser = (request, reply) => {
+    request.server.database.user.findOne({
+        login    : request.payload.login,
+        password : encrypt.hash256(request.payload.password)
+    }).then(user => {
+        if ( !user ) {
+            reply(null, { msg : 'ko' }).code(401);
+            return;
+        }
+        reply(null, { msg : 'ok' });
+    }).catch(err => {
+        reply.badImplementation(err.message)
+    });
+};
 
 module.exports.findAll = (request, reply) => {
     request.server.database.user.find({}).then(data => {
@@ -46,7 +61,7 @@ module.exports.findOneById = (request, reply) => {
         _id : request.params.id || null
     }).then(user => {
         if ( !user ) {
-            reply.notFound('User not found', { id : request.params.id || null });
+            reply.notFound('User not found', { id : request.params.id });
             return;
         }
         reply(null, user.toObject());
@@ -61,11 +76,11 @@ module.exports.create = (request, reply) => {
     model.save().then((saved) => {
         let user = saved.toObject();
         
-        request.server.mailer.sendInfo(_.extend(user, { password : request.payload.password })).then(()=> {
+        request.server.mailer.sendCreationDataInfo(_.extend(user, { password : request.payload.password })).then(() => {
             reply(null, user);
         }).catch((err) => {
-            if (err) {
-                console.error(`Couldn\'t send the mail to the user ${ user.id }`, err, user);
+            if ( err ) {
+                request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
             }
             reply(null, user);
         });
@@ -83,22 +98,62 @@ module.exports.update = (request, reply) => {
         _id : request.params.id,
     }, request.payload).then(data => {
         if ( !data ) {
-            reply.notFound('User not found', { id : request.params.id || null });
+            reply.notFound('User not found', { id : request.params.id });
             return;
         }
         request.server.database.user.findOne({
             _id : request.params.id,
         }).then(user => {
             if ( !user ) {
-                reply.notFound('User not found', { id : request.params.id || null });
+                reply.notFound('User not found', { id : request.params.id });
                 return;
             }
-            reply(null, {
+            let diff = {
                 before : data.toObject(),
                 after  : user.toObject()
-            });
+            };
+            
+            if ( _.isEqual(_.pick(diff.before, sendEmailKeysDiffConditionOnUpdate), _.pick(diff.after, sendEmailKeysDiffConditionOnUpdate)) ) {
+                request.server.mailer.sendUpdatedDataInfo(diff.after).then(() => {
+                    reply(null, user);
+                }).catch((err) => {
+                    if ( err ) {
+                        request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
+                    }
+                    reply(null, user);
+                });
+            } else {
+                reply(null, diff);
+            }
+            
         }).catch((err) => {
             reply.badImplementation(err, { id : request.params.id });
+        });
+    }).catch((err) => {
+        reply.badImplementation(err, { id : request.params.id });
+    });
+};
+
+module.exports.changePassword = (request, reply) => {
+    let newPassword = require('password-generator')(12, false);
+    
+    request.server.database.user.findOneAndUpdate({
+        login : request.params.login,
+    }, { password : newPassword }).then(data => {
+        if ( !data ) {
+            reply.notFound('User not found', { login : request.params.login });
+            return;
+        }
+        
+        let user = data.toObject();
+        
+        request.server.mailer.sendNewPasswordInfo(_.assignIn(user, { password : newPassword })).then(() => {
+            reply(null, { msg : 'ok' })
+        }).catch((err) => {
+            if ( err ) {
+                request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
+            }
+            reply(null, { msg : 'ok' })
         });
     }).catch((err) => {
         reply.badImplementation(err, { id : request.params.id });
@@ -110,7 +165,7 @@ module.exports.delete = (request, reply) => {
         _id : request.params.id,
     }).then(data => {
         if ( !data ) {
-            reply.notFound('User not found', { id : request.params.id || null });
+            reply.notFound('User not found', { id : request.params.id });
             return;
         }
         reply(null, { id : request.params.id })
@@ -122,14 +177,14 @@ module.exports.delete = (request, reply) => {
 module.exports.inflate = (request, reply) => {
     async.mapLimit(_.range(request.params.number), 20, (number, callback) => {
         let userInfo = casual.user;
-        let user = new request.server.database.user(userInfo)
+        let user     = new request.server.database.user(userInfo);
         
         user.save().then((saved) => {
-            request.server.mailer.sendInfo(userInfo).then(() => {
+            request.server.mailer.sendCreationDataInfo(userInfo).then(() => {
                 callback(null, saved.toObject());
             }).catch(err => {
-                if (err) {
-                    console.error(`Couldn\'t send the mail to the user ${ userInfo.id }`, err, userInfo);
+                if ( err ) {
+                    request.server.log('error', `Couldn\'t send the mail to the user ${ userInfo.id }`, err, userInfo);
                 }
                 callback(null, saved.toObject());
             })
@@ -137,7 +192,7 @@ module.exports.inflate = (request, reply) => {
             callback(err);
         })
     }, (err, users) => {
-        if (err) {
+        if ( err ) {
             reply.badImplementation(err);
             return;
         }

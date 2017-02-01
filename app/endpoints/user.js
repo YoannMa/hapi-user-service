@@ -1,8 +1,9 @@
 'use strict';
 
 const handler = require('../handlers/user');
-const Joi = require('joi');
-const user = require('../schemas/user');
+const Joi     = require('joi');
+const user    = require('../schemas/user');
+const quickResponses    = require('../schemas/quickResponses');
 
 module.exports.register = (server, options, next) => {
     server.route(
@@ -104,6 +105,67 @@ module.exports.register = (server, options, next) => {
                             number : Joi.number().integer().min(1).max(500).required()
                         }
                     }
+                }
+            },
+            {
+                method : 'POST',
+                path   : '/user/reset/{login}',
+                config : {
+                    description : 'Regénère un mot de passe pour l\'user',
+                    tags        : [ 'api' ],
+                    handler     : handler.changePassword,
+                    response    : {
+                        status : {
+                            200 : quickResponses.ok
+                        }
+                    },
+                    plugins     : {
+                        'hapi-swagger' : {
+                            responses : {
+                                200 : {
+                                    description : 'mot de passe regénéré',
+                                    schema      : quickResponses.ok
+                                }
+                            }
+                        }
+                    },
+                    validate    : {
+                        params : {
+                            login : user.baseRaw.login
+                        }
+                    }
+                }
+            },
+            {
+                method : 'POST',
+                path   : '/user/authent',
+                config : {
+                    description : 'Authentifie un utilisateur',
+                    tags        : [ 'api' ],
+                    handler     : handler.authenticateUser,
+                    response    : {
+                        status : {
+                            200 : quickResponses.ok,
+                            401 : quickResponses.ko
+                        }
+                    },
+                    plugins     : {
+                        'hapi-swagger' : {
+                            responses : {
+                                200 : {
+                                    description : 'utilisateurs authentifié',
+                                    schema      : quickResponses.ok
+                                },
+                                401 : {
+                                    description : 'utilisateurs non authentifié',
+                                    schema      : quickResponses.ko
+                                }
+                            }
+                        }
+                    },
+                    validate    : {
+                        payload : require('../schemas/user').authentication
+                    },
                 }
             },
             {
