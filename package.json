@@ -21,6 +21,7 @@
     "@yoannma/iut-encrypt": "github:yoannma/iut-encrypt",
     "async": "2.1.2",
     "blipp": "2.3.0",
+    "bluebird": "latest",
     "boom": "4.2.0",
     "casual": "^1.5.9",
     "faker": "3.1.0",
@@ -30,6 +31,7 @@
     "good-squeeze": "5.0.1",
     "hapi": "15.2.0",
     "hapi-boom-decorators": "2.1.0",
+    "hapi-io": "^0.1.0",
     "hapi-swagger": "7.4.0",
     "inert": "4.0.2",
     "joi": "10.0.1",
@@ -38,13 +40,13 @@
     "k7": "1.5.0",
     "k7-mongoose": "1.5.0",
     "lodash": "latest",
+    "mailgen": "latest",
     "nir-generator": "^0.1.0",
     "nodemailer": "^2.7.2",
     "password-generator": "^2.1.0",
     "plugo": "0.3.8",
     "vision": "4.1.0",
-    "mailgen": "latest",
-    "bluebird": "latest"
+    "socket.io-client": "latest"
   },
   "devDependencies": {
     "eslint": "^3.15.0",

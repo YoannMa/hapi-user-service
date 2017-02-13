@@ -243,5 +243,5 @@ module.exports.register = (server, options, next) => {
 };
 
 module.exports.register.attributes = {
-    name : 'default-routes'
+    name : 'user-routes'
 };

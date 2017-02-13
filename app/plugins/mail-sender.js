@@ -1,88 +1,33 @@
 'use strict';
 
-const Mailgen    = require('mailgen');
-const Nodemailer = require('nodemailer');
-const _          = require('lodash');
+const io    = require('socket.io-client');
+const _ = require('lodash');
 
 const mailer = {
-    _sendMail             : (context) => {
+    _callMailService      : (namespace, context) => {
         return new Promise((resolve, reject) => {
-            mailer._transporter.sendMail(_.assignIn({
-                from    : 'mysublimeapp@nodejs.com', // sender address
-                to      : 'yoann.test.test@gmail.com', // list of receivers
-                subject : 'Your profile was updated', // Subject line
-            }, context), (error, info) => {
-                if (error) {
-                    reject(error);
+            mailer._socket.emit(namespace, context, (res) => {
+                if (!res || res.msg === 'ko') {
+                    reject(res);
                 }
-                resolve(info);
+                resolve(res);
             });
         });
     },
     _sendCreationDataInfo : (user) => {
-        let mailTemplate = {
-            body : {
-                name  : user.firstname + ' ' + user.lastname,
-                intro : [
-                    'Welcome to my beautiful user app! We\'re very excited to have you on board.',
-                    `Your login is ${ user.login }`,
-                    `Your password is ${ user.password }`
-                ],
-                outro : 'Need help, or have questions? Just reply to this email, we\'d love to help.'
-            }
-        };
-        
-        return mailer._sendMail({
-            subject : 'Welcome and check your information', // Subject line
-            text    : mailer._mailGenerator.generatePlaintext(mailTemplate), // plaintext body
-            html    : mailer._mailGenerator.generate(mailTemplate) // html body
-        });
+        return mailer._callMailService('user/createMail', _.pick(user, [ 'firstname', 'lastname', 'login', 'password' ]));
     },
     _sendUpdatedDataInfo  : (user) => {
-        let mailTemplate = {
-            body : {
-                name  : user.firstname + ' ' + user.lastname,
-                intro : [ 'Your profile was updated just now!' ],
-                outro : 'Need help, or have questions? Just reply to this email, we\'d love to help.'
-            }
-        };
-        
-        return mailer._sendMail({
-            subject : 'Your profile was updated', // Subject line
-            text    : mailer._mailGenerator.generatePlaintext(mailTemplate), // plaintext body
-            html    : mailer._mailGenerator.generate(mailTemplate) // html body
-        });
+        return mailer._callMailService('user/updateUser', _.pick(user, [ 'firstname', 'lastname' ]));
     },
     _sendNewPasswordInfo  : (user) => {
-        let mailTemplate = {
-            body : {
-                name  : user.firstname + ' ' + user.lastname,
-                intro : [
-                    'As you requested, we changed your password',
-                    `Your new password is <code>${ user.password }</code>`
-                ],
-                outro : 'Need help, or have questions? Just reply to this email, we\'d love to help.'
-            }
-        };
-        
-        return mailer._sendMail({
-            subject : 'Your password was updated', // Subject line
-            text    : mailer._mailGenerator.generatePlaintext(mailTemplate), // plaintext body
-            html    : mailer._mailGenerator.generate(mailTemplate) // html body
-        });
+        return mailer._callMailService('user/changePassword', _.pick(user, [ 'firstname', 'lastname', 'password' ]));
     },
-    
     register : (server, option, next) => {
-        mailer._server        = server;
-        mailer._transporter   = Nodemailer.createTransport(`smtps://${process.env.NODE_SMTP_USER}:${process.env.NODE_SMTP_PASSWORD}@smtp.gmail.com`);
-        mailer._mailGenerator = new Mailgen({
-            theme   : 'salted',
-            product : {
-                name : 'HAPI SERVER',
-                link : 'https://nolink.com/'
-            }
+        mailer._socket = io('0.0.0.0:8081');
+        mailer._socket.on('connect', () => {
+            console.log('a user connected');
         });
-        
         server.decorate('server', 'mailer', {
             'sendCreationDataInfo' : mailer._sendCreationDataInfo,
             'sendNewPasswordInfo'  : mailer._sendNewPasswordInfo,

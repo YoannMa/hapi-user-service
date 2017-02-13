@@ -6,18 +6,19 @@ const casual                             = require('casual');
 const encrypt                            = require('@yoannma/iut-encrypt');
 const sendEmailKeysDiffConditionOnUpdate = [ 'login', 'password' ];
 
-casual.define('nir', () => { return require('nir-generator').generateNir() });
+casual.define('nir', () => { return require('nir-generator').generateNir(); });
 casual.define('user', () => {
     let firstName  = casual.first_name;
     let lastName   = casual.last_name;
     let randomCase = string => {
         return _.map(string, char => {
             return casual.coin_flip ? char.toUpperCase() : char.toLowerCase();
-        }).join('')
+        }).join('');
     };
     
     let email = casual.email.split('@');
-    email     = randomCase(email[ 0 ]) + '@' + email[ 1 ];
+    
+    email = randomCase(email[ 0 ]) + '@' + email[ 1 ];
     
     return {
         login     : randomCase(firstName + lastName),
@@ -40,7 +41,7 @@ module.exports.authenticateUser = (request, reply) => {
         }
         reply(null, { msg : 'ok' });
     }).catch(err => {
-        reply.badImplementation(err.message)
+        reply.badImplementation(err.message);
     });
 };
 
@@ -80,7 +81,7 @@ module.exports.create = (request, reply) => {
             reply(null, user);
         }).catch((err) => {
             if (err) {
-                request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
+                request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
             }
             reply(null, user);
         });
@@ -118,7 +119,7 @@ module.exports.update = (request, reply) => {
                     reply(null, user);
                 }).catch((err) => {
                     if (err) {
-                        request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
+                        request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
                     }
                     reply(null, user);
                 });
