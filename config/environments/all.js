@@ -17,8 +17,8 @@ const all = {
                 stripTrailingSlash : true,
             },
             routes : {
-                cors               : true,
-                security           : true
+                cors     : true,
+                security : true
             }
         }
     },

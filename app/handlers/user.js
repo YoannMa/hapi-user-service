@@ -1,9 +1,9 @@
 'use strict';
 
-const _       = require('lodash');
-const async   = require('async');
-const casual  = require('casual');
-const encrypt = require('@yoannma/iut-encrypt');
+const _                                  = require('lodash');
+const async                              = require('async');
+const casual                             = require('casual');
+const encrypt                            = require('@yoannma/iut-encrypt');
 const sendEmailKeysDiffConditionOnUpdate = [ 'login', 'password' ];
 
 casual.define('nir', () => { return require('nir-generator').generateNir() });
@@ -34,7 +34,7 @@ module.exports.authenticateUser = (request, reply) => {
         login    : request.payload.login,
         password : encrypt.hash256(request.payload.password)
     }).then(user => {
-        if ( !user ) {
+        if (!user) {
             reply(null, { msg : 'ko' }).code(401);
             return;
         }
@@ -46,7 +46,7 @@ module.exports.authenticateUser = (request, reply) => {
 
 module.exports.findAll = (request, reply) => {
     request.server.database.user.find({}).then(data => {
-        if ( data ) {
+        if (data) {
             reply(null, data.map(user => user.toObject()));
             return;
         }
@@ -60,7 +60,7 @@ module.exports.findOneById = (request, reply) => {
     request.server.database.user.findOne({
         _id : request.params.id || null
     }).then(user => {
-        if ( !user ) {
+        if (!user) {
             reply.notFound('User not found', { id : request.params.id });
             return;
         }
@@ -79,13 +79,13 @@ module.exports.create = (request, reply) => {
         request.server.mailer.sendCreationDataInfo(_.extend(user, { password : request.payload.password })).then(() => {
             reply(null, user);
         }).catch((err) => {
-            if ( err ) {
+            if (err) {
                 request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
             }
             reply(null, user);
         });
     }).catch(err => {
-        if ( err.code === 11000 ) { // duplicate key
+        if (err.code === 11000) { // duplicate key
             reply.preconditionFailed(err.message);
             return;
         }
@@ -97,14 +97,14 @@ module.exports.update = (request, reply) => {
     request.server.database.user.findOneAndUpdate({
         _id : request.params.id,
     }, request.payload).then(data => {
-        if ( !data ) {
+        if (!data) {
             reply.notFound('User not found', { id : request.params.id });
             return;
         }
         request.server.database.user.findOne({
             _id : request.params.id,
         }).then(user => {
-            if ( !user ) {
+            if (!user) {
                 reply.notFound('User not found', { id : request.params.id });
                 return;
             }
@@ -113,11 +113,11 @@ module.exports.update = (request, reply) => {
                 after  : user.toObject()
             };
             
-            if ( _.isEqual(_.pick(diff.before, sendEmailKeysDiffConditionOnUpdate), _.pick(diff.after, sendEmailKeysDiffConditionOnUpdate)) ) {
+            if (_.isEqual(_.pick(diff.before, sendEmailKeysDiffConditionOnUpdate), _.pick(diff.after, sendEmailKeysDiffConditionOnUpdate))) {
                 request.server.mailer.sendUpdatedDataInfo(diff.after).then(() => {
                     reply(null, user);
                 }).catch((err) => {
-                    if ( err ) {
+                    if (err) {
                         request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
                     }
                     reply(null, user);
@@ -139,8 +139,8 @@ module.exports.changePassword = (request, reply) => {
     
     request.server.database.user.findOneAndUpdate({
         login : request.params.login,
-    }, { password : newPassword }).then(data => {
-        if ( !data ) {
+    }, { password : encrypt.hash256(newPassword) }).then(data => {
+        if (!data) {
             reply.notFound('User not found', { login : request.params.login });
             return;
         }
@@ -148,12 +148,12 @@ module.exports.changePassword = (request, reply) => {
         let user = data.toObject();
         
         request.server.mailer.sendNewPasswordInfo(_.assignIn(user, { password : newPassword })).then(() => {
-            reply(null, { msg : 'ok' })
+            reply(null, { msg : 'ok' });
         }).catch((err) => {
-            if ( err ) {
-                request.server.log('error', `Couldn\'t send the mail to the user ${ user.id }`, err, user);
+            if (err) {
+                request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
             }
-            reply(null, { msg : 'ok' })
+            reply(null, { msg : 'ok' });
         });
     }).catch((err) => {
         reply.badImplementation(err, { id : request.params.id });
@@ -164,7 +164,7 @@ module.exports.delete = (request, reply) => {
     request.server.database.user.findOneAndRemove({
         _id : request.params.id,
     }).then(data => {
-        if ( !data ) {
+        if (!data) {
             reply.notFound('User not found', { id : request.params.id });
             return;
         }
@@ -183,16 +183,16 @@ module.exports.inflate = (request, reply) => {
             request.server.mailer.sendCreationDataInfo(userInfo).then(() => {
                 callback(null, saved.toObject());
             }).catch(err => {
-                if ( err ) {
-                    request.server.log('error', `Couldn\'t send the mail to the user ${ userInfo.id }`, err, userInfo);
+                if (err) {
+                    request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(userInfo) }`, userInfo);
                 }
                 callback(null, saved.toObject());
-            })
+            });
         }).catch(err => {
             callback(err);
-        })
+        });
     }, (err, users) => {
-        if ( err ) {
+        if (err) {
             reply.badImplementation(err);
             return;
         }

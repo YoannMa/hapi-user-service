@@ -12,7 +12,7 @@ const mailer = {
                 to      : 'yoann.test.test@gmail.com', // list of receivers
                 subject : 'Your profile was updated', // Subject line
             }, context), (error, info) => {
-                if ( error ) {
+                if (error) {
                     reject(error);
                 }
                 resolve(info);

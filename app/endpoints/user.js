@@ -1,9 +1,9 @@
 'use strict';
 
-const handler = require('../handlers/user');
-const Joi     = require('joi');
-const user    = require('../schemas/user');
-const quickResponses    = require('../schemas/quickResponses');
+const handler        = require('../handlers/user');
+const Joi            = require('joi');
+const user           = require('../schemas/user');
+const quickResponses = require('../schemas/quickResponses');
 
 module.exports.register = (server, options, next) => {
     server.route(
@@ -214,7 +214,7 @@ module.exports.register = (server, options, next) => {
                     plugins     : {
                         'hapi-swagger' : {
                             responses : {
-                                202 : {
+                                204 : {
                                     description : 'utilisateur supprimé avec succés',
                                     schema      : Joi.object({
                                         id : user.id
