@@ -1,9 +1,12 @@
 'use strict';
 
-const io    = require('socket.io-client');
-const _ = require('lodash');
+const io = require('socket.io-client');
+const _  = require('lodash');
 
 const mailer = {
+    options               : {
+        url : 'http://0.0.0.0:8081'
+    },
     _callMailService      : (namespace, context) => {
         return new Promise((resolve, reject) => {
             mailer._socket.emit(namespace, context, (res) => {
@@ -15,7 +18,12 @@ const mailer = {
         });
     },
     _sendCreationDataInfo : (user) => {
-        return mailer._callMailService('user/createMail', _.pick(user, [ 'firstname', 'lastname', 'login', 'password' ]));
+        return mailer._callMailService('user/createMail', _.pick(user, [
+            'firstname',
+            'lastname',
+            'login',
+            'password'
+        ]));
     },
     _sendUpdatedDataInfo  : (user) => {
         return mailer._callMailService('user/updateUser', _.pick(user, [ 'firstname', 'lastname' ]));
@@ -23,8 +31,10 @@ const mailer = {
     _sendNewPasswordInfo  : (user) => {
         return mailer._callMailService('user/changePassword', _.pick(user, [ 'firstname', 'lastname', 'password' ]));
     },
-    register : (server, option, next) => {
-        mailer._socket = io('http://0.0.0.0:8081');
+    register              : (server, option, next) => {
+        mailer.options = _.extend(mailer.options, option);
+        
+        mailer._socket = io(mailer.options.url);
         
         mailer._socket.on('connect', () => {
             server.log('info', 'Connected to mail service');
