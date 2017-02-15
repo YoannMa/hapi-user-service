@@ -24,10 +24,12 @@ const mailer = {
         return mailer._callMailService('user/changePassword', _.pick(user, [ 'firstname', 'lastname', 'password' ]));
     },
     register : (server, option, next) => {
-        mailer._socket = io('0.0.0.0:8081');
+        mailer._socket = io('http://0.0.0.0:8081');
+        
         mailer._socket.on('connect', () => {
-            console.log('a user connected');
+            server.log('info', 'Connected to mail service');
         });
+        
         server.decorate('server', 'mailer', {
             'sendCreationDataInfo' : mailer._sendCreationDataInfo,
             'sendNewPasswordInfo'  : mailer._sendNewPasswordInfo,
