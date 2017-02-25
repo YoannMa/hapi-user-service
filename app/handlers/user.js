@@ -77,14 +77,12 @@ module.exports.create = (request, reply) => {
     model.save().then((saved) => {
         let user = saved.toObject();
         
-        request.server.mailer.sendCreationDataInfo(_.extend(user, { password : request.payload.password })).then(() => {
-            reply(null, user);
-        }).catch((err) => {
+        request.server.mailer.sendCreationDataInfo(_.extend(user, { password : request.payload.password })).catch((err) => {
             if (err) {
                 request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
             }
-            reply(null, user);
         });
+        reply(null, user);
     }).catch(err => {
         if (err.code === 11000) { // duplicate key
             reply.preconditionFailed(err.message);
@@ -115,14 +113,12 @@ module.exports.update = (request, reply) => {
             };
             
             if (_.isEqual(_.pick(diff.before, sendEmailKeysDiffConditionOnUpdate), _.pick(diff.after, sendEmailKeysDiffConditionOnUpdate))) {
-                request.server.mailer.sendUpdatedDataInfo(diff.after).then(() => {
-                    reply(null, user);
-                }).catch((err) => {
+                request.server.mailer.sendUpdatedDataInfo(diff.after).catch((err) => {
                     if (err) {
                         request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
                     }
-                    reply(null, user);
                 });
+                reply(null, user);
             } else {
                 reply(null, diff);
             }
@@ -139,23 +135,21 @@ module.exports.changePassword = (request, reply) => {
     let newPassword = require('password-generator')(12, false);
     
     request.server.database.user.findOneAndUpdate({
-        login : request.params.login,
+        email : request.params.email,
     }, { password : encrypt.hash256(newPassword) }).then(data => {
         if (!data) {
-            reply.notFound('User not found', { login : request.params.login });
+            reply.notFound('User not found', { email : request.params.email });
             return;
         }
         
         let user = data.toObject();
         
-        request.server.mailer.sendNewPasswordInfo(_.assignIn(user, { password : newPassword })).then(() => {
-            reply(null, { msg : 'ok' });
-        }).catch((err) => {
+        request.server.mailer.sendNewPasswordInfo(_.assignIn(user, { password : newPassword })).catch((err) => {
             if (err) {
                 request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
             }
-            reply(null, { msg : 'ok' });
         });
+        reply(null, { msg : 'ok' });
     }).catch((err) => {
         reply.badImplementation(err, { id : request.params.id });
     });
@@ -181,14 +175,12 @@ module.exports.inflate = (request, reply) => {
         let user     = new request.server.database.user(userInfo);
         
         user.save().then((saved) => {
-            request.server.mailer.sendCreationDataInfo(userInfo).then(() => {
-                callback(null, saved.toObject());
-            }).catch(err => {
+            request.server.mailer.sendCreationDataInfo(userInfo).catch(err => {
                 if (err) {
                     request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(userInfo) }`, userInfo);
                 }
-                callback(null, saved.toObject());
             });
+            callback(null, saved.toObject());
         }).catch(err => {
             callback(err);
         });

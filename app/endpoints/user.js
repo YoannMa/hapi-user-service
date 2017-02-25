@@ -109,7 +109,7 @@ module.exports.register = (server, options, next) => {
             },
             {
                 method : 'POST',
-                path   : '/user/reset/{login}',
+                path   : '/user/reset/{email}',
                 config : {
                     description : 'Regénère un mot de passe pour l\'user',
                     tags        : [ 'api' ],
@@ -131,7 +131,7 @@ module.exports.register = (server, options, next) => {
                     },
                     validate    : {
                         params : {
-                            login : user.baseRaw.login
+                            login : user.baseRaw.email
                         }
                     }
                 }
