@@ -112,17 +112,14 @@ module.exports.update = (request, reply) => {
                 after  : user.toObject()
             };
             
-            if (_.isEqual(_.pick(diff.before, sendEmailKeysDiffConditionOnUpdate), _.pick(diff.after, sendEmailKeysDiffConditionOnUpdate))) {
+            if (!_.isEqual(_.pick(data, sendEmailKeysDiffConditionOnUpdate), _.pick(user, sendEmailKeysDiffConditionOnUpdate))) {
                 request.server.mailer.sendUpdatedDataInfo(diff.after).catch((err) => {
                     if (err) {
                         request.server.log('error', `${ err.message } : Couldn\'t send the mail to the user ${ JSON.stringify(user) }`);
                     }
                 });
-                reply(null, user);
-            } else {
-                reply(null, diff);
             }
-            
+            reply(null, diff);
         }).catch((err) => {
             reply.badImplementation(err, { id : request.params.id });
         });
